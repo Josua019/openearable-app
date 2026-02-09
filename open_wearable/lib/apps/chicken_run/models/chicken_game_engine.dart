@@ -99,6 +99,7 @@ class ChickenGameEngine extends ChangeNotifier {
 
   void _gameOver() {
     _state = GameState.gameOver;
+    _foxActive = false;
     _foxTimer?.cancel();
     notifyListeners();
   }
