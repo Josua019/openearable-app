@@ -20,9 +20,18 @@ class ChickenGameEngine extends ChangeNotifier {
   Timer? _foxTimer;
   Timer? _gameLoopTimer;
 
+  final _peckController = StreamController<void>.broadcast();
+  Stream<void> get onPeck => _peckController.stream;
+
   GameState get state => _state;
   int get score => _score;
   bool get foxActive => _foxActive;
+
+  @override
+  void dispose() {
+    _peckController.close();
+    super.dispose();
+  }
 
   ChickenGameEngine(this.wearable);
 
@@ -67,6 +76,7 @@ class ChickenGameEngine extends ChangeNotifier {
     } else {
       if (gesture == HeadGesture.peck) {
         _score++;
+        _peckController.add(null);
         // Randomly trigger fox appearance (1 in 5 chance)
         if (Random().nextInt(5) == 0) {
           _startFoxTimer();

@@ -14,15 +14,30 @@ class ChickenRunApp extends StatefulWidget {
   State<ChickenRunApp> createState() => _ChickenRunAppState();
 }
 
-class _ChickenRunAppState extends State<ChickenRunApp> {
+class _ChickenRunAppState extends State<ChickenRunApp>
+    with SingleTickerProviderStateMixin {
   late ChickenGameEngine _engine;
   final List<StreamSubscription> _sensorSubscriptions = [];
+  late AnimationController _controller;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
     _engine = ChickenGameEngine(widget.wearable);
     _setupSensors();
+
+    _controller = AnimationController(
+        duration: const Duration(milliseconds: 150), vsync: this);
+
+    _animation = Tween<double>(begin: 0, end: 30).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+
+    _engine.onPeck.listen((_) {
+      _controller.forward().then((_) => _controller.reverse());
+    });
   }
 
   void _setupSensors() {
@@ -183,18 +198,25 @@ class _ChickenRunAppState extends State<ChickenRunApp> {
   }
 
   Widget _buildChickenAvatar(ChickenGameEngine engine) {
-    return AnimatedContainer(
-      duration: Duration(milliseconds: 200),
-      height: 220,
-      width: 220,
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        shape: BoxShape.circle,
-      ),
-      child: CustomPaint(
-        painter: ChickenBodyPainter(isFoxActive: engine.foxActive),
-        size: Size(220, 220),
-      ),
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          height: 220,
+          width: 220,
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          child: CustomPaint(
+            painter: ChickenBodyPainter(
+              isFoxActive: engine.foxActive,
+              peckOffset: _animation.value,
+            ),
+            size: Size(220, 220),
+          ),
+        );
+      },
     );
   }
 
@@ -230,7 +252,9 @@ class _ChickenRunAppState extends State<ChickenRunApp> {
 
 class ChickenBodyPainter extends CustomPainter {
   final bool isFoxActive;
-  ChickenBodyPainter({required this.isFoxActive});
+  final double peckOffset; // 0 to 30
+
+  ChickenBodyPainter({required this.isFoxActive, this.peckOffset = 0.0});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -283,10 +307,6 @@ class ChickenBodyPainter extends CustomPainter {
             height: 120),
         paint);
 
-    // HEAD
-    canvas.drawCircle(
-        Offset(size.width / 2 + 30, size.height / 2 - 40), 45, paint);
-
     // WING (Slightly darker or same color with shadow)
     paint.color = Color(0xFFF0F0F0);
     // Wing shape
@@ -297,6 +317,28 @@ class ChickenBodyPainter extends CustomPainter {
     wingPath.quadraticBezierTo(size.width / 2 - 10, size.height / 2 + 60,
         size.width / 2 - 40, size.height / 2 + 40);
     canvas.drawPath(wingPath, paint);
+
+    // HEAD GROUP (With Rotation for Peck)
+    canvas.save();
+
+    // Pivot point (Neck area approx)
+    double pivotX = size.width / 2 + 20;
+    double pivotY = size.height / 2 - 20;
+
+    canvas.translate(pivotX, pivotY);
+    // Rotate checks
+    // peckOffset 0 -> 0 rotation
+    // peckOffset 30 -> ~45 degrees down?
+    double rotation = (peckOffset / 30.0) * (3.14159 / 4); // Max 45 deg
+    canvas.rotate(rotation);
+    canvas.translate(-pivotX, -pivotY);
+
+    // HEAD
+    // Adjusted offsets because of rotation pivot
+    // Original center was: size.width / 2 + 30, size.height / 2 - 40
+    paint.color = Colors.white;
+    canvas.drawCircle(
+        Offset(size.width / 2 + 30, size.height / 2 - 40), 45, paint);
 
     // COMB (Red)
     paint.color = Color(0xFFE57373);
@@ -328,10 +370,13 @@ class ChickenBodyPainter extends CustomPainter {
     paint.color = Color(0xFF333333);
     canvas.drawCircle(Offset(size.width / 2 + 50, size.height / 2 - 50),
         isFoxActive ? 6 : 4, paint);
+
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant ChickenBodyPainter oldDelegate) {
-    return oldDelegate.isFoxActive != isFoxActive;
+    return oldDelegate.isFoxActive != isFoxActive ||
+        oldDelegate.peckOffset != peckOffset;
   }
 }
