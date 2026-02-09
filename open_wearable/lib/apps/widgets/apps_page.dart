@@ -70,7 +70,7 @@ List<AppInfo> _apps = [
     ),
   ),
   AppInfo(
-    logoPath: "", // TODO: Add logo
+    logoPath: "lib/apps/chicken_run/assets/logo.png",
     title: "Chicken Run",
     description: "Be a chicken! Peck grains and avoid the fox.",
     widget: SelectEarableView(
