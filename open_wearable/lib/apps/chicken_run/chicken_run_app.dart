@@ -57,17 +57,6 @@ class _ChickenRunAppState extends State<ChickenRunApp>
           orElse: () => sensorManager.sensors.last,
         );
 
-        // Configure Sensors (Enable Streaming)
-        for (var sensor in [accelSensor, gyroSensor]) {
-          for (var config in sensor.relatedConfigurations) {
-            if (config is ConfigurableSensorConfiguration) {
-              if (config.values.isNotEmpty) {
-                config.setConfiguration(config.values.first);
-              }
-            }
-          }
-        }
-
         // Listen to Accel for Pecking
         _sensorSubscriptions.add(accelSensor.sensorStream.listen((data) {
           if (data is SensorDoubleValue) {
