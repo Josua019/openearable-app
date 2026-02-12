@@ -126,6 +126,18 @@ class _ChickenRunAppState extends State<ChickenRunApp>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // High Score Display
+                      Text(
+                        "High Score: ${engine.highScore}",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: _getTextColor(engine.dayCycle)
+                              .withValues(alpha: 0.8),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+
                       // Score Display
                       Text(
                         "${engine.score}",

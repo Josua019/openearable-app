@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
@@ -18,6 +19,11 @@ class ChickenGameEngine extends ChangeNotifier {
 
   GameState _state = GameState.idle;
   int _score = 0;
+  int get score => _score;
+
+  int _highScore = 0;
+  int get highScore => _highScore;
+
   bool _foxActive = false;
   DayCycle _dayCycle = DayCycle.day;
 
@@ -34,7 +40,6 @@ class ChickenGameEngine extends ChangeNotifier {
   Stream<void> get onPeck => _peckController.stream;
 
   GameState get state => _state;
-  int get score => _score;
   bool get foxActive => _foxActive;
   double get headTurn => _headTurn;
   DayCycle get dayCycle => _dayCycle;
@@ -48,7 +53,20 @@ class ChickenGameEngine extends ChangeNotifier {
     super.dispose();
   }
 
-  ChickenGameEngine(this.wearable);
+  ChickenGameEngine(this.wearable) {
+    _loadHighScore();
+  }
+
+  Future<void> _loadHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    _highScore = prefs.getInt('chicken_run_highscore') ?? 0;
+    notifyListeners();
+  }
+
+  Future<void> _saveHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('chicken_run_highscore', _highScore);
+  }
 
   void startGame() {
     _score = 0;
@@ -187,6 +205,12 @@ class ChickenGameEngine extends ChangeNotifier {
     _foxActive = false;
     _foxTimer?.cancel();
     _gameOverTimer?.cancel();
+
+    if (_score > _highScore) {
+      _highScore = _score;
+      _saveHighScore();
+    }
+
     notifyListeners();
   }
 }
