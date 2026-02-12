@@ -16,6 +16,7 @@ class HeadGestureRecognizer {
   // State
   DateTime _lastPeckTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastLookTime = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _peckTriggered = false;
 
   // Yaw Integration State
   double _yawIntegration = 0.0; // Current accumulated Yaw (rad)
@@ -36,10 +37,15 @@ class HeadGestureRecognizer {
 
     // Detect Peck (Pitch Down / Forward)
     if (pitch > peckPitchThreshold) {
-      if (now.difference(_lastPeckTime).inMilliseconds > 400) {
-        detected = HeadGesture.peck;
-        _lastPeckTime = now;
+      if (!_peckTriggered) {
+        if (now.difference(_lastPeckTime).inMilliseconds > 400) {
+          detected = HeadGesture.peck;
+          _lastPeckTime = now;
+          _peckTriggered = true;
+        }
       }
+    } else {
+      _peckTriggered = false;
     }
     return detected;
   }
