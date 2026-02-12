@@ -10,7 +10,9 @@ enum HeadGesture {
 
 class HeadGestureRecognizer {
   // Thresholds
+  // Peck: -0.9 radians (approx -51 deg). Resting head is ~-1.0. A peck raises pitch to > -0.9.
   static const double peckPitchThreshold = -0.9;
+  // Turn: 30.0 degrees (integrated yaw). High threshold filters out wobble during pecking.
   static const double lookYawThreshold = 30.0;
 
   // State
@@ -20,6 +22,7 @@ class HeadGestureRecognizer {
 
   // Yaw Integration State
   double _yawIntegration = 0.0; // Current accumulated Yaw (rad)
+  double get yaw => _yawIntegration;
   int _lastGyroTimestamp = 0;
 
   HeadGesture process(SensorDoubleValue sensorData) {
@@ -36,16 +39,18 @@ class HeadGestureRecognizer {
     DateTime now = DateTime.now();
 
     // Detect Peck (Pitch Down / Forward)
+    // Uses edge-detection: Only trigger when WE ENTER the threshold zone (from below).
+    // This prevents continuous triggering if the user just looks down and holds it.
     if (pitch > peckPitchThreshold) {
       if (!_peckTriggered) {
         if (now.difference(_lastPeckTime).inMilliseconds > 400) {
           detected = HeadGesture.peck;
           _lastPeckTime = now;
-          _peckTriggered = true;
+          _peckTriggered = true; // Mark as "holding" peck
         }
       }
     } else {
-      _peckTriggered = false;
+      _peckTriggered = false; // Reset when head goes back up
     }
     return detected;
   }
