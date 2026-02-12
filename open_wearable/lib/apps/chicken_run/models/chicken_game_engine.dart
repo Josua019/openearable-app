@@ -15,7 +15,6 @@ enum DayCycle { day, sunset, night }
 class ChickenGameEngine extends ChangeNotifier {
   final Wearable wearable;
   final HeadGestureRecognizer _recognizer = HeadGestureRecognizer();
-  // final AudioController _audioController = AudioController();
 
   GameState _state = GameState.idle;
   int _score = 0;

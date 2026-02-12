@@ -95,10 +95,7 @@ class _ChickenRunAppState extends State<ChickenRunApp>
             backgroundColor: _getBackgroundColor(engine.dayCycle, engine.state),
             appBar: PlatformAppBar(
               title: Text("Chicken Run",
-                  style: TextStyle(
-                      color: engine.dayCycle == DayCycle.night
-                          ? Colors.white
-                          : Color(0xFF333333))),
+                  style: TextStyle(color: _getTextColor(engine.dayCycle))),
               backgroundColor:
                   _getBackgroundColor(engine.dayCycle, engine.state),
               cupertino: (_, __) => CupertinoNavigationBarData(
@@ -106,14 +103,14 @@ class _ChickenRunAppState extends State<ChickenRunApp>
               ),
               material: (_, __) => MaterialAppBarData(
                 elevation: 0,
-                iconTheme: IconThemeData(
-                    color: engine.dayCycle == DayCycle.night
-                        ? Colors.white
-                        : Color(0xFF333333)),
+                iconTheme: IconThemeData(color: _getTextColor(engine.dayCycle)),
               ),
             ),
             body: Stack(
               children: [
+                // Celestial Body (Sun/Moon - Behind everything)
+                _buildCelestialBody(engine),
+
                 Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -124,7 +121,7 @@ class _ChickenRunAppState extends State<ChickenRunApp>
                         style: TextStyle(
                           fontSize: 80,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333),
+                          color: _getTextColor(engine.dayCycle),
                         ),
                       ),
                       Text(
@@ -132,7 +129,8 @@ class _ChickenRunAppState extends State<ChickenRunApp>
                         style: TextStyle(
                           fontSize: 20,
                           letterSpacing: 2.0,
-                          color: Color(0xFF888888),
+                          color: _getTextColor(engine.dayCycle)
+                              .withValues(alpha: 0.6),
                         ),
                       ),
 
@@ -162,36 +160,8 @@ class _ChickenRunAppState extends State<ChickenRunApp>
                   ),
                 ),
 
-                // Fox Overlay
-                if (engine.foxActive && engine.state == GameState.playing)
-                  Positioned.fill(
-                    child: Container(
-                      color: Colors.red.withValues(alpha: 0.3),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "FOX!",
-                              style: TextStyle(
-                                color: Color(0xFFD84315),
-                                fontSize: 60,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 5,
-                                shadows: [
-                                  Shadow(
-                                    blurRadius: 10.0,
-                                    color: Colors.black12,
-                                    offset: Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                // Fox Overlay (On top)
+                _buildFoxOverlay(engine),
               ],
             ),
           );
@@ -253,6 +223,66 @@ class _ChickenRunAppState extends State<ChickenRunApp>
     );
   }
 
+  Color _getTextColor(DayCycle cycle) {
+    return cycle == DayCycle.night ? Colors.white : Color(0xFF333333);
+  }
+
+  Widget _buildCelestialBody(ChickenGameEngine engine) {
+    // Day: Sun Top-Right
+    // Sunset: Sun Bottom-Left (Setting)
+    // Night: Moon Top-Left
+
+    double top = -100;
+    double left = -100;
+    double right = -100;
+    double bottom = -100;
+    Color color = Colors.transparent;
+    double size = 80;
+    BoxShape shape = BoxShape.circle;
+
+    switch (engine.dayCycle) {
+      case DayCycle.day:
+        top = 60;
+        right = 40;
+        color = Color(0xFFFFD54F); // Yellow Sun
+        break;
+      case DayCycle.sunset:
+        top = 120;
+        left = 70;
+        color = Color(0xFFFF7043); // Orange Sun
+        break;
+      case DayCycle.night:
+        top = 60;
+        left = 40;
+        color = Color(0xFFE0E0E0); // White Moon
+        break;
+    }
+
+    return AnimatedPositioned(
+      duration: Duration(seconds: 1),
+      curve: Curves.easeInOut,
+      top: top != -100 ? top : null,
+      bottom: bottom != -100 ? bottom : null,
+      left: left != -100 ? left : null,
+      right: right != -100 ? right : null,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: color,
+          shape: shape,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.5),
+              blurRadius: 20,
+              spreadRadius: 5,
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
   Color _getBackgroundColor(DayCycle cycle, GameState state) {
     if (state == GameState.gameOver) return Color(0xFFFFC2C2);
 
@@ -297,7 +327,7 @@ class ChickenBodyPainter extends CustomPainter {
         paint);
 
     // Draw Legs
-    paint.color = Color(0xFFFFB74D);
+    paint.color = Color(0xFFE65100); // Dark Orange for contrast
     paint.strokeWidth = 6;
     paint.strokeCap = StrokeCap.round;
     // Left leg
@@ -392,7 +422,7 @@ class ChickenBodyPainter extends CustomPainter {
         paint);
 
     // BEAK (Orange)
-    paint.color = Color(0xFFFFB74D);
+    paint.color = Color(0xFFE65100); // Dark Orange for contrast
     Path beakPath = Path();
     // Beak should pivot slightly to show direction
     beakPath.moveTo(size.width / 2 + 70 + headShift * 1.5,
@@ -430,4 +460,84 @@ class ChickenBodyPainter extends CustomPainter {
         oldDelegate.peckOffset != peckOffset ||
         oldDelegate.headTurn != headTurn;
   }
+}
+
+Widget _buildFoxOverlay(ChickenGameEngine engine) {
+  if (!engine.foxActive || engine.state != GameState.playing) {
+    return SizedBox.shrink();
+  }
+
+  return Positioned.fill(
+    child: Container(
+      decoration: BoxDecoration(
+          gradient: RadialGradient(
+        colors: [
+          Colors.transparent,
+          Colors.red.withValues(alpha: 0.6), // Vignette
+        ],
+        radius: 1.0,
+      )),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Glowing Eyes
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildFoxEye(),
+                SizedBox(width: 40),
+                _buildFoxEye(),
+              ],
+            ),
+            SizedBox(height: 20),
+            Text(
+              "FOX!",
+              style: TextStyle(
+                color: Color(0xFFD84315),
+                fontSize: 60,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 5,
+                shadows: [
+                  Shadow(
+                    blurRadius: 10.0,
+                    color: Colors.black12,
+                    offset: Offset(0, 5),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildFoxEye() {
+  return Container(
+    width: 40,
+    height: 20,
+    decoration: BoxDecoration(
+      color: Colors.yellow,
+      borderRadius: BorderRadius.circular(20), // Oval shape
+      boxShadow: [
+        BoxShadow(
+          color: Colors.red,
+          blurRadius: 15,
+          spreadRadius: 5,
+        )
+      ],
+    ),
+    child: Center(
+      child: Container(
+        width: 5,
+        height: 15,
+        decoration: BoxDecoration(
+          color: Colors.black,
+          shape: BoxShape.circle, // Pupil
+        ),
+      ),
+    ),
+  );
 }
