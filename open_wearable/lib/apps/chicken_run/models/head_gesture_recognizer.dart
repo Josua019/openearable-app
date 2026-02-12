@@ -51,14 +51,14 @@ class HeadGestureRecognizer {
       return HeadGesture.none;
     }
 
-    double zRate = gyroData.values[2]; // Yaw rate
+    double xRate = gyroData.values[0]; // Yaw rate
     int currentTimestamp = gyroData.timestamp;
 
     // Calculate dt and integrate Yaw
     if (_lastGyroTimestamp != 0) {
       double dt = (currentTimestamp - _lastGyroTimestamp) / 1000.0;
       if (dt > 0 && dt < 1.0) {
-        _yawIntegration += zRate * dt;
+        _yawIntegration += xRate * dt;
       }
     }
     _lastGyroTimestamp = currentTimestamp;
