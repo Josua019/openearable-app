@@ -19,6 +19,7 @@ class ChickenGameEngine extends ChangeNotifier {
   bool _foxActive = false;
   Timer? _foxTimer;
   Timer? _gameLoopTimer;
+  Timer? _gameOverTimer;
 
   final _peckController = StreamController<void>.broadcast();
   Stream<void> get onPeck => _peckController.stream;
@@ -29,6 +30,9 @@ class ChickenGameEngine extends ChangeNotifier {
 
   @override
   void dispose() {
+    _foxTimer?.cancel();
+    _gameLoopTimer?.cancel();
+    _gameOverTimer?.cancel();
     _peckController.close();
     super.dispose();
   }
@@ -47,6 +51,7 @@ class ChickenGameEngine extends ChangeNotifier {
     _state = GameState.idle;
     _foxTimer?.cancel();
     _gameLoopTimer?.cancel();
+    _gameOverTimer?.cancel();
     notifyListeners();
   }
 
@@ -71,6 +76,7 @@ class ChickenGameEngine extends ChangeNotifier {
     if (_foxActive) {
       if (gesture == HeadGesture.lookLeft || gesture == HeadGesture.lookRight) {
         _foxActive = false;
+        _gameOverTimer?.cancel(); // Cancel game over if fox is scared away
         notifyListeners();
       }
     } else {
@@ -98,7 +104,8 @@ class ChickenGameEngine extends ChangeNotifier {
         notifyListeners();
 
         // Give 2 seconds to react
-        Future.delayed(Duration(seconds: 2), () {
+        _gameOverTimer?.cancel();
+        _gameOverTimer = Timer(Duration(seconds: 2), () {
           if (_foxActive && _state == GameState.playing) {
             _gameOver();
           }
@@ -111,6 +118,7 @@ class ChickenGameEngine extends ChangeNotifier {
     _state = GameState.gameOver;
     _foxActive = false;
     _foxTimer?.cancel();
+    _gameOverTimer?.cancel();
     notifyListeners();
   }
 }
