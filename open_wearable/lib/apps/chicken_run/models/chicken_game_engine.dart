@@ -25,6 +25,10 @@ class ChickenGameEngine extends ChangeNotifier {
   int get highScore => _highScore;
 
   bool _foxActive = false;
+  // Tutorial State
+  String? _tutorialMessage;
+  bool _firstFox = true;
+
   DayCycle _dayCycle = DayCycle.day;
 
   // Normalized head turn value (-1.0 to 1.0) for UI rendering.
@@ -41,6 +45,7 @@ class ChickenGameEngine extends ChangeNotifier {
 
   GameState get state => _state;
   bool get foxActive => _foxActive;
+  String? get tutorialMessage => _tutorialMessage;
   double get headTurn => _headTurn;
   DayCycle get dayCycle => _dayCycle;
 
@@ -74,6 +79,11 @@ class ChickenGameEngine extends ChangeNotifier {
     _foxActive = false;
     _headTurn = 0.0;
     _dayCycle = DayCycle.day;
+
+    // Tutorial: Start
+    _tutorialMessage = "Nod head to PECK!";
+    _firstFox = true;
+
     _startFoxTimer();
     notifyListeners();
   }
@@ -142,6 +152,13 @@ class ChickenGameEngine extends ChangeNotifier {
     if (_foxActive) {
       if (gesture == HeadGesture.lookLeft || gesture == HeadGesture.lookRight) {
         _foxActive = false;
+
+        // Tutorial: Fox Avoided
+        if (_firstFox) {
+          _firstFox = false;
+          _tutorialMessage = null;
+        }
+
         _gameOverTimer?.cancel(); // Cancel game over if fox is scared away
         notifyListeners();
       }
@@ -150,6 +167,12 @@ class ChickenGameEngine extends ChangeNotifier {
         _score++;
         _updateDayCycle();
         _peckController.add(null);
+
+        // Tutorial: Peck Success
+        if (_tutorialMessage == "Nod head to PECK!") {
+          _tutorialMessage = null;
+        }
+
         // Randomly trigger fox appearance (1 in 5 chance)
         if (Random().nextInt(5) == 0) {
           _startFoxTimer();
@@ -182,16 +205,28 @@ class ChickenGameEngine extends ChangeNotifier {
 
     int randomDelay = minDelay + Random().nextInt(maxDelay - minDelay + 1);
 
+    // Tutorial: Force Fox early if it's the first time and score > 5?
+    // Actually, asking user requests 'first appearance'.
+    // We'll let random chance handle it, but when it happens:
+
     print("Fox coming in $randomDelay seconds (Cycle: $_dayCycle)");
 
     _foxTimer = Timer(Duration(seconds: randomDelay), () {
       if (_state == GameState.playing) {
         _foxActive = true;
+
+        // Tutorial: First Fox
+        int reactionTime = 2;
+        if (_firstFox) {
+          _tutorialMessage = "Turn head SIDEWAYS to HIDE!";
+          reactionTime = 5; // Give extra time
+        }
+
         notifyListeners();
 
-        // Give 2 seconds to react
+        // Give time to react
         _gameOverTimer?.cancel();
-        _gameOverTimer = Timer(Duration(seconds: 2), () {
+        _gameOverTimer = Timer(Duration(seconds: reactionTime), () {
           if (_foxActive && _state == GameState.playing) {
             _gameOver();
           }

@@ -151,7 +151,33 @@ class _ChickenRunAppState extends State<ChickenRunApp>
                       // Chicken Avatar
                       _buildChickenAvatar(engine),
 
-                      SizedBox(height: 60),
+                      SizedBox(height: 20),
+
+                      // Tutorial Text (In-flow, Fixed Height)
+                      SizedBox(
+                        height: 80,
+                        child: Center(
+                          child: (engine.tutorialMessage != null &&
+                                  engine.state == GameState.playing)
+                              ? Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: Text(
+                                    engine.tutorialMessage!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: _getTextColor(engine.dayCycle),
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                )
+                              : SizedBox.shrink(),
+                        ),
+                      ),
+
+                      SizedBox(height: 10),
 
                       // Instructions / Status
                       if (engine.state == GameState.idle)
