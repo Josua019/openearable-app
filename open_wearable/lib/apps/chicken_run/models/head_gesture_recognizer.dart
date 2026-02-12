@@ -10,8 +10,8 @@ enum HeadGesture {
 
 class HeadGestureRecognizer {
   // Thresholds
-  static const double peckPitchThreshold = 0.5;
-  static const double lookYawThreshold = 0.5;
+  static const double peckPitchThreshold = -0.9;
+  static const double lookYawThreshold = 30.0;
 
   // State
   DateTime _lastPeckTime = DateTime.fromMillisecondsSinceEpoch(0);
