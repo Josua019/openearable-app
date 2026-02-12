@@ -91,117 +91,123 @@ class _ChickenRunAppState extends State<ChickenRunApp>
       value: _engine,
       child: Consumer<ChickenGameEngine>(
         builder: (context, engine, child) {
-          return PlatformScaffold(
-            backgroundColor: _getBackgroundColor(engine.dayCycle, engine.state),
-            appBar: PlatformAppBar(
-              title: Text("Chicken Run",
-                  style: TextStyle(color: _getTextColor(engine.dayCycle))),
-              backgroundColor:
-                  _getBackgroundColor(engine.dayCycle, engine.state),
-              cupertino: (_, __) => CupertinoNavigationBarData(
-                border: Border(bottom: BorderSide.none),
-              ),
-              material: (_, __) => MaterialAppBarData(
-                elevation: 0,
-                iconTheme: IconThemeData(color: _getTextColor(engine.dayCycle)),
-              ),
-            ),
-            body: Stack(
-              children: [
-                // Celestial Body (Sun/Moon - Behind everything)
-                _buildCelestialBody(engine),
-
-                Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // High Score Display
-                      Text(
-                        "High Score: ${engine.highScore}",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _getTextColor(engine.dayCycle)
-                              .withValues(alpha: 0.8),
-                        ),
-                      ),
-                      SizedBox(height: 10),
-
-                      // Score Display
-                      Text(
-                        "${engine.score}",
-                        style: TextStyle(
-                          fontSize: 80,
-                          fontWeight: FontWeight.bold,
-                          color: _getTextColor(engine.dayCycle),
-                        ),
-                      ),
-                      Text(
-                        "GRAINS",
-                        style: TextStyle(
-                          fontSize: 20,
-                          letterSpacing: 2.0,
-                          color: _getTextColor(engine.dayCycle)
-                              .withValues(alpha: 0.6),
-                        ),
-                      ),
-
-                      SizedBox(height: 40),
-
-                      // Chicken Avatar
-                      _buildChickenAvatar(engine),
-
-                      SizedBox(height: 20),
-
-                      // Tutorial Text (In-flow, Fixed Height)
-                      SizedBox(
-                        height: 80,
-                        child: Center(
-                          child: (engine.tutorialMessage != null &&
-                                  engine.state == GameState.playing)
-                              ? Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  child: Text(
-                                    engine.tutorialMessage!,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: _getTextColor(engine.dayCycle),
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                )
-                              : SizedBox.shrink(),
-                        ),
-                      ),
-
-                      SizedBox(height: 10),
-
-                      // Instructions / Status
-                      if (engine.state == GameState.idle)
-                        _buildButton("START", () => engine.startGame())
-                      else if (engine.state == GameState.gameOver)
-                        Column(
-                          children: [
-                            Text("GAME OVER",
-                                style: TextStyle(
-                                    color: Color(0xFFE57373),
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold)),
-                            SizedBox(height: 20),
-                            _buildButton("RETRY", () => engine.startGame()),
-                          ],
-                        ),
-                    ],
+          return Stack(
+            children: [
+              PlatformScaffold(
+                backgroundColor:
+                    _getBackgroundColor(engine.dayCycle, engine.state),
+                appBar: PlatformAppBar(
+                  title: Text("Chicken Run",
+                      style: TextStyle(color: _getTextColor(engine.dayCycle))),
+                  backgroundColor:
+                      _getBackgroundColor(engine.dayCycle, engine.state),
+                  cupertino: (_, __) => CupertinoNavigationBarData(
+                    border: Border(bottom: BorderSide.none),
+                  ),
+                  material: (_, __) => MaterialAppBarData(
+                    elevation: 0,
+                    iconTheme:
+                        IconThemeData(color: _getTextColor(engine.dayCycle)),
                   ),
                 ),
+                body: Stack(
+                  children: [
+                    // Celestial Body (Sun/Moon - Behind everything)
+                    _buildCelestialBody(engine),
 
-                // Fox Overlay (On top)
-                _buildFoxOverlay(engine),
-              ],
-            ),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // High Score Display
+                          Text(
+                            "High Score: ${engine.highScore}",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: _getTextColor(engine.dayCycle)
+                                  .withValues(alpha: 0.8),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+
+                          // Score Display
+                          Text(
+                            "${engine.score}",
+                            style: TextStyle(
+                              fontSize: 80,
+                              fontWeight: FontWeight.bold,
+                              color: _getTextColor(engine.dayCycle),
+                            ),
+                          ),
+                          Text(
+                            "GRAINS",
+                            style: TextStyle(
+                              fontSize: 20,
+                              letterSpacing: 2.0,
+                              color: _getTextColor(engine.dayCycle)
+                                  .withValues(alpha: 0.6),
+                            ),
+                          ),
+
+                          SizedBox(height: 40),
+
+                          // Chicken Avatar
+                          _buildChickenAvatar(engine),
+
+                          SizedBox(height: 20),
+
+                          // Tutorial Text (In-flow, Fixed Height)
+                          SizedBox(
+                            height: 80,
+                            child: Center(
+                              child: (engine.tutorialMessage != null &&
+                                      engine.state == GameState.playing)
+                                  ? Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20),
+                                      child: Text(
+                                        engine.tutorialMessage!,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: _getTextColor(engine.dayCycle),
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    )
+                                  : SizedBox.shrink(),
+                            ),
+                          ),
+
+                          SizedBox(height: 10),
+
+                          // Instructions / Status
+                          if (engine.state == GameState.idle)
+                            _buildButton("START", () => engine.startGame())
+                          else if (engine.state == GameState.gameOver)
+                            Column(
+                              children: [
+                                Text("GAME OVER",
+                                    style: TextStyle(
+                                        color: Color(0xFFE57373),
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold)),
+                                SizedBox(height: 20),
+                                _buildButton("RETRY", () => engine.startGame()),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Fox Overlay (On top of game, including AppBar)
+              _buildFoxOverlay(engine),
+            ],
           );
         },
       ),
