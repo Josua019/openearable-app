@@ -10,13 +10,18 @@ enum GameState {
   gameOver,
 }
 
+enum DayCycle { day, sunset, night }
+
 class ChickenGameEngine extends ChangeNotifier {
   final Wearable wearable;
   final HeadGestureRecognizer _recognizer = HeadGestureRecognizer();
+  // final AudioController _audioController = AudioController();
 
   GameState _state = GameState.idle;
   int _score = 0;
   bool _foxActive = false;
+  DayCycle _dayCycle = DayCycle.day;
+
   // Normalized head turn value (-1.0 to 1.0) for UI rendering.
   // 0.0 is center, -1.0 is full left, 1.0 is full right.
   double _headTurn = 0.0;
@@ -33,6 +38,7 @@ class ChickenGameEngine extends ChangeNotifier {
   int get score => _score;
   bool get foxActive => _foxActive;
   double get headTurn => _headTurn;
+  DayCycle get dayCycle => _dayCycle;
 
   @override
   void dispose() {
@@ -50,6 +56,7 @@ class ChickenGameEngine extends ChangeNotifier {
     _state = GameState.playing;
     _foxActive = false;
     _headTurn = 0.0;
+    _dayCycle = DayCycle.day;
     _startFoxTimer();
     notifyListeners();
   }
@@ -88,6 +95,29 @@ class ChickenGameEngine extends ChangeNotifier {
     _handleGesture(gesture);
   }
 
+  void _updateDayCycle() {
+    // Cycle length: 45 points
+    // 0-14: Day
+    // 15-29: Sunset
+    // 30-44: Night
+    // 45-59: Day ...
+    int cycleScore = _score % 45;
+
+    DayCycle newCycle;
+    if (cycleScore < 15) {
+      newCycle = DayCycle.day;
+    } else if (cycleScore < 30) {
+      newCycle = DayCycle.sunset;
+    } else {
+      newCycle = DayCycle.night;
+    }
+
+    if (newCycle != _dayCycle) {
+      _dayCycle = newCycle;
+      // Could notify here, but we usually notify after score update anyway
+    }
+  }
+
   void _handleGesture(HeadGesture gesture) {
     if (gesture != HeadGesture.none) {
       print("Gesture: $gesture");
@@ -101,6 +131,7 @@ class ChickenGameEngine extends ChangeNotifier {
     } else {
       if (gesture == HeadGesture.peck) {
         _score++;
+        _updateDayCycle();
         _peckController.add(null);
         // Randomly trigger fox appearance (1 in 5 chance)
         if (Random().nextInt(5) == 0) {
@@ -115,8 +146,27 @@ class ChickenGameEngine extends ChangeNotifier {
     // If a fox is already coming (timer active), do NOT reset it.
     if (_foxTimer != null && _foxTimer!.isActive) return;
 
-    int randomDelay = Random().nextInt(4) + 2; // 2-5 seconds
-    print("Fox coming in $randomDelay seconds");
+    // Difficulty Scaling based on DayCycle
+    int minDelay, maxDelay;
+    switch (_dayCycle) {
+      case DayCycle.day:
+        minDelay = 3;
+        maxDelay = 6;
+        break;
+      case DayCycle.sunset:
+        minDelay = 2;
+        maxDelay = 5;
+        break;
+      case DayCycle.night:
+        minDelay = 1;
+        maxDelay = 3;
+        break;
+    }
+
+    int randomDelay = minDelay + Random().nextInt(maxDelay - minDelay + 1);
+
+    print("Fox coming in $randomDelay seconds (Cycle: $_dayCycle)");
+
     _foxTimer = Timer(Duration(seconds: randomDelay), () {
       if (_state == GameState.playing) {
         _foxActive = true;

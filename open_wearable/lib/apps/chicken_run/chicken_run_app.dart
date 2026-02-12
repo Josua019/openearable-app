@@ -89,27 +89,30 @@ class _ChickenRunAppState extends State<ChickenRunApp>
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: _engine,
-      child: PlatformScaffold(
-        backgroundColor: _engine.state == GameState.gameOver
-            ? Color(0xFFFFC2C2)
-            : Color(0xFFF5F2E8),
-        appBar: PlatformAppBar(
-          title:
-              Text("Chicken Run", style: TextStyle(color: Color(0xFF333333))),
-          backgroundColor: _engine.state == GameState.gameOver
-              ? Color(0xFFFFC2C2)
-              : Color(0xFFF5F2E8),
-          cupertino: (_, __) => CupertinoNavigationBarData(
-            border: Border(bottom: BorderSide.none),
-          ),
-          material: (_, __) => MaterialAppBarData(
-            elevation: 0,
-            iconTheme: IconThemeData(color: Color(0xFF333333)),
-          ),
-        ),
-        body: Consumer<ChickenGameEngine>(
-          builder: (context, engine, child) {
-            return Stack(
+      child: Consumer<ChickenGameEngine>(
+        builder: (context, engine, child) {
+          return PlatformScaffold(
+            backgroundColor: _getBackgroundColor(engine.dayCycle, engine.state),
+            appBar: PlatformAppBar(
+              title: Text("Chicken Run",
+                  style: TextStyle(
+                      color: engine.dayCycle == DayCycle.night
+                          ? Colors.white
+                          : Color(0xFF333333))),
+              backgroundColor:
+                  _getBackgroundColor(engine.dayCycle, engine.state),
+              cupertino: (_, __) => CupertinoNavigationBarData(
+                border: Border(bottom: BorderSide.none),
+              ),
+              material: (_, __) => MaterialAppBarData(
+                elevation: 0,
+                iconTheme: IconThemeData(
+                    color: engine.dayCycle == DayCycle.night
+                        ? Colors.white
+                        : Color(0xFF333333)),
+              ),
+            ),
+            body: Stack(
               children: [
                 Center(
                   child: Column(
@@ -190,9 +193,9 @@ class _ChickenRunAppState extends State<ChickenRunApp>
                     ),
                   ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -248,6 +251,19 @@ class _ChickenRunAppState extends State<ChickenRunApp>
         ),
       ),
     );
+  }
+
+  Color _getBackgroundColor(DayCycle cycle, GameState state) {
+    if (state == GameState.gameOver) return Color(0xFFFFC2C2);
+
+    switch (cycle) {
+      case DayCycle.day:
+        return Color(0xFF87CEEB);
+      case DayCycle.sunset:
+        return Color(0xFFFFB74D);
+      case DayCycle.night:
+        return Color(0xFF1A237E);
+    }
   }
 }
 
