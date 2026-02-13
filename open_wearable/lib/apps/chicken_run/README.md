@@ -81,18 +81,23 @@ yawIntegration += yawRate × dt
 
 ```
 chicken_run/
-├── chicken_run_app.dart          # UI layer (Flutter widgets, CustomPainter)
-├── README.md                     # This file
-└── models/
-    ├── chicken_game_engine.dart   # Game logic, state management (ChangeNotifier)
-    └── head_gesture_recognizer.dart  # Signal processing, gesture detection
+├── chicken_run_app.dart              # Main game screen & layout
+├── README.md                         # This file
+├── models/
+│   ├── chicken_game_engine.dart      # Game logic, state management (ChangeNotifier)
+│   └── head_gesture_recognizer.dart  # Signal processing, gesture detection
+├── painters/
+│   └── chicken_body_painter.dart     # CustomPainter for the chicken avatar
+└── widgets/
+    └── fox_overlay.dart              # Fox attack overlay with vignette & glowing eyes
 ```
 
 ### Component Responsibilities
 
 | Component | Role |
 |---|---|
-| `HeadGestureRecognizer` | Pure signal processing. Converts raw sensor data into `HeadGesture` events. Stateless except for integration state. |
-| `ChickenGameEngine` | Game state machine. Manages score, fox AI, day cycle, tutorial, and high score. Extends `ChangeNotifier` for reactive UI updates. |
-| `ChickenRunApp` | Flutter UI. Renders the chicken (via `ChickenBodyPainter`), score display, tutorial text, fox overlay, and celestial bodies. Subscribes to sensors. |
-| `ChickenBodyPainter` | `CustomPainter` that draws the chicken with parallax-based head turning and rotation-based peck animation. |
+| `HeadGestureRecognizer` | Pure signal processing. Converts raw sensor data into `HeadGesture` events. |
+| `ChickenGameEngine` | Game state machine. Manages score, fox AI, day cycle, tutorial, and high score. |
+| `ChickenRunApp` | Main Flutter UI. Renders layout, score, tutorial text, and celestial bodies. Subscribes to sensors. |
+| `ChickenBodyPainter` | `CustomPainter` that draws the chicken with parallax-based turning and rotation-based peck animation. |
+| `fox_overlay.dart` | Standalone widget functions for the fox attack overlay (red vignette, glowing eyes). |
