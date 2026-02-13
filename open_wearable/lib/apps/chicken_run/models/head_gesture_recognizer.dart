@@ -1,18 +1,38 @@
 import 'dart:math';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 
+/// Represents a detected head gesture from sensor data.
 enum HeadGesture {
+  /// No gesture detected.
   none,
+
+  /// A forward nod (peck), detected via accelerometer pitch.
   peck,
+
+  /// A left head turn, detected via gyroscope yaw integration.
   lookLeft,
+
+  /// A right head turn, detected via gyroscope yaw integration.
   lookRight,
 }
 
+/// Recognizes head gestures from raw accelerometer and gyroscope data.
+///
+/// Uses two independent processing pipelines:
+/// - [process]: Analyzes accelerometer data to detect **peck** gestures via
+///   pitch angle calculation and edge-detection state machine.
+/// - [processGyro]: Integrates gyroscope yaw rate over time to detect
+///   **left/right turn** gestures with exponential decay to center.
+///
+/// Both pipelines include cooldown timers to prevent duplicate detections
+/// and cross-suppression logic (turns are suppressed briefly after pecks).
 class HeadGestureRecognizer {
-  // Thresholds
-  // Peck: -0.9 radians (approx -51 deg). Resting head is ~-1.0. A peck raises pitch to > -0.9.
+  /// Pitch threshold (radians) for peck detection.
+  /// Resting head pitch is ~-1.0 rad. A forward nod raises pitch above this value.
   static const double peckPitchThreshold = -0.9;
-  // Turn: 30.0 degrees (integrated yaw). High threshold filters out wobble during pecking.
+
+  /// Yaw threshold (degrees, integrated) for turn detection.
+  /// High value filters out wobble from pecking motion.
   static const double lookYawThreshold = 30.0;
 
   // State
@@ -25,6 +45,11 @@ class HeadGestureRecognizer {
   double get yaw => _yawIntegration;
   int _lastGyroTimestamp = 0;
 
+  /// Processes accelerometer data to detect peck gestures.
+  ///
+  /// Computes pitch from the 3-axis acceleration vector and uses
+  /// edge-detection (only triggers on threshold crossing) with a
+  /// 400ms cooldown to prevent double-counting.
   HeadGesture process(SensorDoubleValue sensorData) {
     if (sensorData.values.length < 3) return HeadGesture.none;
 
@@ -55,7 +80,11 @@ class HeadGestureRecognizer {
     return detected;
   }
 
-  // Handle Gyro Data for Turn Detection
+  /// Processes gyroscope data to detect left/right head turns.
+  ///
+  /// Integrates yaw rate over time with 5% exponential decay per frame.
+  /// Suppresses detection for 500ms after a peck to avoid false positives.
+  /// The accumulated [yaw] value is also exposed for continuous UI animation.
   HeadGesture processGyro(SensorDoubleValue gyroData) {
     // Check if we pecked recently (Accel detected)
     if (DateTime.now().difference(_lastPeckTime).inMilliseconds < 500) {

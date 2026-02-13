@@ -5,14 +5,29 @@ import 'package:flutter/foundation.dart';
 import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'head_gesture_recognizer.dart';
 
+/// Represents the current state of the game.
 enum GameState {
+  /// Game is not running, waiting for user to start.
   idle,
+
+  /// Game is actively running.
   playing,
+
+  /// Game has ended (fox caught the chicken).
   gameOver,
 }
 
+/// Represents the visual day/night cycle phase, which also controls difficulty.
 enum DayCycle { day, sunset, night }
 
+/// Core game engine for Chicken Run.
+///
+/// Manages all game state including score, fox AI, day/night cycle,
+/// tutorial system, and high score persistence. Receives processed
+/// sensor data from [HeadGestureRecognizer] and translates gestures
+/// into game actions.
+///
+/// Extends [ChangeNotifier] to reactively update the Flutter UI.
 class ChickenGameEngine extends ChangeNotifier {
   final Wearable wearable;
   final HeadGestureRecognizer _recognizer = HeadGestureRecognizer();
@@ -73,6 +88,7 @@ class ChickenGameEngine extends ChangeNotifier {
     await prefs.setInt('chicken_run_highscore', _highScore);
   }
 
+  /// Starts a new game, resetting score, state, and tutorial.
   void startGame() {
     _score = 0;
     _state = GameState.playing;
@@ -88,6 +104,7 @@ class ChickenGameEngine extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Stops the game and cancels all active timers.
   void stopGame() {
     _state = GameState.idle;
     _foxTimer?.cancel();
@@ -96,6 +113,7 @@ class ChickenGameEngine extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Processes incoming accelerometer data for peck detection.
   void processSensorData(SensorDoubleValue data) {
     if (_state != GameState.playing) return;
 
@@ -103,6 +121,7 @@ class ChickenGameEngine extends ChangeNotifier {
     _handleGesture(gesture);
   }
 
+  /// Processes incoming gyroscope data for turn detection and UI head animation.
   void processGyroData(SensorDoubleValue data) {
     if (_state != GameState.playing) return;
 
@@ -145,10 +164,8 @@ class ChickenGameEngine extends ChangeNotifier {
     }
   }
 
+  /// Routes a detected gesture to the appropriate game action.
   void _handleGesture(HeadGesture gesture) {
-    if (gesture != HeadGesture.none) {
-      print("Gesture: $gesture");
-    }
     if (_foxActive) {
       if (gesture == HeadGesture.lookLeft || gesture == HeadGesture.lookRight) {
         _foxActive = false;
@@ -182,6 +199,7 @@ class ChickenGameEngine extends ChangeNotifier {
     }
   }
 
+  /// Schedules a fox appearance with difficulty-scaled random delay.
   void _startFoxTimer() {
     // If a fox is already coming (timer active), do NOT reset it.
     if (_foxTimer != null && _foxTimer!.isActive) return;
@@ -204,12 +222,6 @@ class ChickenGameEngine extends ChangeNotifier {
     }
 
     int randomDelay = minDelay + Random().nextInt(maxDelay - minDelay + 1);
-
-    // Tutorial: Force Fox early if it's the first time and score > 5?
-    // Actually, asking user requests 'first appearance'.
-    // We'll let random chance handle it, but when it happens:
-
-    print("Fox coming in $randomDelay seconds (Cycle: $_dayCycle)");
 
     _foxTimer = Timer(Duration(seconds: randomDelay), () {
       if (_state == GameState.playing) {
@@ -235,6 +247,7 @@ class ChickenGameEngine extends ChangeNotifier {
     });
   }
 
+  /// Ends the game, updates high score if beaten, and notifies listeners.
   void _gameOver() {
     _state = GameState.gameOver;
     _foxActive = false;

@@ -5,6 +5,11 @@ import 'package:open_earable_flutter/open_earable_flutter.dart';
 import 'package:provider/provider.dart';
 import 'models/chicken_game_engine.dart';
 
+/// Main widget for the Chicken Run game.
+///
+/// Connects to the [Wearable] device's sensors, sets up the game engine,
+/// and provides the reactive UI including the chicken avatar, score display,
+/// day/night cycle background, tutorial text, and fox overlay.
 class ChickenRunApp extends StatefulWidget {
   final Wearable wearable;
 
@@ -40,6 +45,7 @@ class _ChickenRunAppState extends State<ChickenRunApp>
     });
   }
 
+  /// Discovers and subscribes to accelerometer and gyroscope sensor streams.
   void _setupSensors() {
     if (widget.wearable is SensorManager) {
       SensorManager sensorManager = widget.wearable as SensorManager;
@@ -214,6 +220,7 @@ class _ChickenRunAppState extends State<ChickenRunApp>
     );
   }
 
+  /// Builds the animated chicken avatar with peck and turn animations.
   Widget _buildChickenAvatar(ChickenGameEngine engine) {
     return AnimatedBuilder(
       animation: _animation,
@@ -238,6 +245,7 @@ class _ChickenRunAppState extends State<ChickenRunApp>
     );
   }
 
+  /// Builds a styled game button (START / RETRY).
   Widget _buildButton(String label, VoidCallback onPressed) {
     return GestureDetector(
       onTap: onPressed,
@@ -267,10 +275,12 @@ class _ChickenRunAppState extends State<ChickenRunApp>
     );
   }
 
+  /// Returns text color adapted to the current day cycle for readability.
   Color _getTextColor(DayCycle cycle) {
     return cycle == DayCycle.night ? Colors.white : Color(0xFF333333);
   }
 
+  /// Builds an animated sun/moon positioned based on the current day cycle.
   Widget _buildCelestialBody(ChickenGameEngine engine) {
     // Day: Sun Top-Right
     // Sunset: Sun Bottom-Left (Setting)
@@ -327,6 +337,7 @@ class _ChickenRunAppState extends State<ChickenRunApp>
     );
   }
 
+  /// Returns the background color based on day cycle and game state.
   Color _getBackgroundColor(DayCycle cycle, GameState state) {
     if (state == GameState.gameOver) return Color(0xFFFFC2C2);
 
@@ -506,6 +517,7 @@ class ChickenBodyPainter extends CustomPainter {
   }
 }
 
+/// Builds the full-screen fox attack overlay with red vignette and glowing eyes.
 Widget _buildFoxOverlay(ChickenGameEngine engine) {
   if (!engine.foxActive || engine.state != GameState.playing) {
     return SizedBox.shrink();
@@ -558,6 +570,7 @@ Widget _buildFoxOverlay(ChickenGameEngine engine) {
   );
 }
 
+/// Builds a single glowing fox eye with slit pupil.
 Widget _buildFoxEye() {
   return Container(
     width: 40,
